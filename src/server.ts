@@ -15,7 +15,6 @@ app.get('/', (req: Request, res: Response) => {
   res.send({ message: 'Corkboard API is running!' });
 });
 
-// Example route using Prisma to count users
 app.get('/users/count', async (req: Request, res: Response) => {
     try {
         const count = await prisma.user.count();
