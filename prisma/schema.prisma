@@ -1,15 +1,55 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
+  binaryTargets = ["native"] 
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String   @id @default(uuid())
+  username        String   @unique
+  email           String   @unique
+  password_hash   String
+  location        Unsupported("GEOGRAPHY(Point, 4326)")? 
+  location_wkt    String?  
+  boards          Board[]
+
+  @@map("User")
+}
+
+model Board {
+  id              String   @id @default(uuid())
+  userId          String   @map("user_id")
+  name            String
+  is_public       Boolean  @default(false)
+  style_data      Json     @default("null")
+  
+  user            User     @relation(fields: [userId], references: [id])
+  posts           Post[]
+
+  @@map("Board")
+}
+
+model Post {
+  id                  String   @id @default(uuid())
+  boardId             String   @map("board_id")
+  contentType         String   @map("content_type")
+  content             String
+  position_x          Float
+  position_y          Float
+  style_data          Json     @default("null")
+  is_advert           Boolean  @default(false)
+  created_at          DateTime @default(now())
+
+  originalPostId      String?  @map("original_post_id") 
+  
+  board               Board    @relation(fields: [boardId], references: [id])
+  
+  originalPost        Post?    @relation("OriginalPost", fields: [originalPostId], references: [id], onDelete: SetNull)
+  copiedPosts         Post[]   @relation("OriginalPost")
+
+  @@map("Post")
 }
